@@ -1,0 +1,115 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>SpeechResponder</groupId>
+	<artifactId>SpeechResponder</artifactId>
+	<version>0.0.4-SNAPSHOT</version>
+
+	<properties>
+		<deploy.targetdir>/home/pi</deploy.targetdir>
+		<deploy.url>scp://mirror</deploy.url>
+	</properties>
+
+	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>3.0.0</version>
+			</extension>
+		</extensions>
+
+		<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.1.1</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.rasbpi.sample.speechresp.GSpeechHearVoice</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- Jar is uploaded to the target directory in the install phase -->
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>wagon-maven-plugin</artifactId>
+				<version>2.0.0</version>
+
+				<executions>
+					<execution>
+						<id>upload-jar</id>
+						<phase>install</phase>
+						<goals>
+							<goal>upload</goal>
+						</goals>
+						<configuration>
+							<serverId>mirror</serverId>
+							<fromDir>${project.basedir}/target</fromDir>
+							<includes>${project.build.finalName}-jar-with-dependencies.jar</includes>
+							<url>${deploy.url}</url>
+							<toDir>${deploy.targetdir}</toDir>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>start-debugging</id>
+						<phase>install</phase>
+						<goals>
+							<goal>sshexec</goal>
+						</goals>
+						<configuration>
+							<serverId>mirror</serverId>
+							<url>${deploy.url}</url>
+							<commands>
+								<command>java -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000 -jar ${deploy.targetdir}/${project.build.finalName}-jar-with-dependencies.jar
+								</command>
+							</commands>
+							<displayCommandOutputs>true</displayCommandOutputs>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-speech</artifactId>
+			<version>1.13.0</version>
+		</dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-texttospeech</artifactId>
+      <version>0.117.1-beta</version>
+    </dependency>
+
+
+	</dependencies>
+
+</project>
