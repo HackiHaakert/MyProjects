@@ -259,14 +259,10 @@ public class GSpeechHearVoice {
 	}
 
 	public static void main(String[] args) {
-		
-		/* Kommentar*/ 
-		
+
 		InetAddress IP;
 		
-		
 		try {
-			IP = null;
 			IP = InetAddress.getLocalHost();
 			System.out.println(IP.toString());
 			
